@@ -1,0 +1,42 @@
+#!/bin/bash
+ESC=$(printf '\033')
+if [ "$1" = "on" ] || [ "$1" = "ON" ] || [ "$1" = "1" ]; then
+
+    if [ "$EUID" != 0 ]; then
+        if ! sudo true; then
+            echo "[-] This operation requires root privilege"
+            exit 1
+        fi
+        echo 2 | sudo tee /proc/sys/kernel/randomize_va_space > /dev/null
+    else
+        echo 2 | tee /proc/sys/kernel/randomize_va_space > /dev/null
+    fi
+    printf "[+] ${ESC}[1m${ESC}[36m%s${ESC}[m\n" "Enabled ASLR"
+
+elif [ "$1" = "off" ] || [ "$1" = "OFF" ] || [ "$1" = "0" ]; then
+
+    if [ "$EUID" != 0 ]; then
+        if ! sudo true; then
+            echo "[-] This operation requires root privilege"
+            exit 1
+        fi
+        echo 0 | sudo tee /proc/sys/kernel/randomize_va_space > /dev/null
+    else
+        echo 0 | tee /proc/sys/kernel/randomize_va_space > /dev/null
+    fi
+    printf "[-] ${ESC}[1m${ESC}[31m%s${ESC}[m\n" "Disabled ASLR"
+
+elif [ "$1" = "check" ] || [ "$1" = "status" ]; then
+
+    ASLR=$(cat /proc/sys/kernel/randomize_va_space)
+    if [ "$ASLR" = "0" ]; then
+        printf "[-] ${ESC}[1m${ESC}[31m%s${ESC}[m\n" "ASLR is disabled"
+    else
+        printf "[+] ${ESC}[1m${ESC}[36m%s${ESC}[m\n" "ASLR is enabled"
+    fi
+
+else
+
+    printf "[?] ${ESC}[1m%s${ESC}[m\n" "Usage: ${0} [on|off|check]"
+
+fi
